@@ -20,28 +20,28 @@ class Grid:
             raise ValueError("No data provided for visualization.")
             
         rows, cols = self.data["grid_size"]
-        grid = [["⬜" for _ in range(cols)] for _ in range(rows)]
+        grid = [["." for _ in range(cols)] for _ in range(rows)]
 
         # Mark walls
         for (x, y) in self.wall_cells:
             if 0 <= y < rows and 0 <= x < cols:
-                grid[y][x] = "⬛"
+                grid[y][x] = "#"
 
         # Mark goals
         for (gx, gy) in self.data["goal_states"]:
             if 0 <= gy < rows and 0 <= gx < cols:
-                grid[gy][gx] = "🟩"
+                grid[gy][gx] = "G"
 
         # Mark initial position (after goals/walls to override)
         ix, iy = self.data["initial_position"]
         if 0 <= iy < rows and 0 <= ix < cols:
-            grid[iy][ix] = "🟥"
+            grid[iy][ix] = "S"
 
         print("\nGrid Map:")
         for row in grid:
             print(" ".join(row))
 
-    def visualize_solution(self, path):
+    def visualize_solution(self, path, visited = None):
         """Visualize a solution path on the grid."""
         if not self.data:
             print("No grid data available.")
@@ -51,14 +51,19 @@ class Grid:
         coords = self._path_to_coordinates(path)
         
         rows, cols = self.data["grid_size"]
-        grid = [["⬜" for _ in range(cols)] for _ in range(rows)]
+        grid = [["." for _ in range(cols)] for _ in range(rows)]
 
         # Mark walls
         for (x, y) in self.wall_cells:
             if 0 <= y < rows and 0 <= x < cols:
-                grid[y][x] = "⬛"
+                grid[y][x] = "#"
 
-        goals_reached = 0
+        # Mark visited nodes
+        if visited:
+            for (x, y) in visited:
+                if 0 <= y < rows and 0 <= x < cols:
+                    grid[y][x] = "+"
+
         reached_goals = []
 
         # Mark path
@@ -66,20 +71,21 @@ class Grid:
             if 0 <= y < rows and 0 <= x < cols:
                 # Use different symbols for start, end, and path steps
                 if i == 0:
-                    grid[y][x] = "🟥"  # Start position
+                    grid[y][x] = "S"  # Start position
                 elif (x, y) in self.data["goal_states"]:
-                    grid[y][x] = "🟩"  # Goal position
+                    grid[y][x] = "G"  # Goal position
                 else:
-                    grid[y][x] = "🟨"  # Path step
+                    grid[y][x] = "P"  # Path step
         
         # Mark remaining goals that weren't reached
         for (gx, gy) in self.data["goal_states"]:
             if (gx, gy) not in reached_goals and 0 <= gy < rows and 0 <= gx < cols:
-                grid[gy][gx] = "🟩"  # Unreached goal
+                grid[gy][gx] = "G"  # Unreached goal
 
         # Print the grid
         for row in grid:
             print(" ".join(row))
+        print("\nS = Start  G = Goal  P = Path  + = Visited  # = Wall")
         
     def _path_to_coordinates(self, path):
         """Convert a path to coordinates."""
