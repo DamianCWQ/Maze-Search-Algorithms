@@ -12,22 +12,28 @@ def main():
     try:
         # Check arguments - update usage message
         if len(sys.argv) < 3 or len(sys.argv) > 4:
-            print("Usage: python search.py <filename> <method> [beam width]")
+            print("\nUsage: python search.py <filename> <method> [beam width]")
+            print("Methods: dfs, bfs, gbfs, astar, iddfs, beam")
+            print ("Example: python search.py input.txt astar\n")
+            print("To test program: python testSuites.py\n")
             print("Note: beam width is only required when using method beam search method, 'beam'")
             sys.exit(1)
 
         filename = sys.argv[1]
         method = sys.argv[2].lower()
 
-        if method == "beam" and len(sys.argv) == 4:
-            try:
-                beam_width = int(sys.argv[3])
-                if beam_width < 1:
-                    print("Beam width must be at least 1, using default (2)")
-                    beam_width = 2
-            except ValueError:
-                print("Invalid beam width value, using default (2)")
-    
+        beam_width = 3 # Default beam width
+        if method == "beam":
+            if len(sys.argv) == 4:
+                try:
+                    beam_width = int(sys.argv[3])
+                    if beam_width < 1:
+                        print("Beam width must be at least 1, using default (3)")
+                except ValueError:
+                    print("Invalid beam width value, using default (3)")
+            else:
+                print("Beam width not provided, using default (3)")
+
         # Parse the input file
         file_reader = FileReader()
         data = file_reader.parse_input_file(filename)
@@ -68,25 +74,24 @@ def main():
                 walls = data["walls"]
             )
         
-        goal, nodes_generated, nodes_visited, path = algo.search()
+        goal, nodes_visited, path, visited_grid = algo.search()
 
         # Display results
         print(f"\n--- Search Results ({method.upper()}) ---")
         print(f"File: {filename}")
         print(f"Algorithm: {method.upper()}")
-        print(f"Nodes generated: {nodes_generated}")
         print(f"Nodes visited: {nodes_visited}")
         
         if goal:
             print(f"Goal reached: {goal}")
-            print(f"Path length: {len(path)}")
             print(f"Path: {' '.join(path)}")
             
             # Visualize the solution path on the grid
             print("\n--- Solution Path ---")
-            grid.visualize_solution(path)
+            grid.visualize_solution(path, visited_grid)
         else:
             print("No goal is reachable")
+            grid.visualize_solution([], visited_grid)
 
     except Exception as e:
         print(f"Error: {e}")

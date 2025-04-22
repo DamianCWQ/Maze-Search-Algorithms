@@ -2,57 +2,56 @@ from searchAlgorithm import SearchAlgorithm
 import heapq
 
 class Beam(SearchAlgorithm):
-    # Initialize the Beam Search algorithm with grid, start position, goal positions, walls, and beam width
-    def __init__(self, grid, start, goals, walls, beam_width=2):
+    def __init__(self, grid, start, goals, walls, beam_width = 3):
         super().__init__(grid, start, goals, walls)
-        self.beam_width = beam_width
+        self.beam_width = max(1, beam_width)  # Ensure beam width is at least 1
 
     def search(self):
-        current_level = [(self.heuristic(self.start, self.get_closest_goal(self.start)), self.start, [])]
-        visited = set()
-        self.nodes_generated = 1
+        current_level = [(self.heuristic(self.start, self.get_closest_goal(self.start)), 0, self.start, [], None)]
         self.nodes_visited = 0
+        visited_nodes = set()
 
         while current_level:
-            # Sort by heuristic and select top-k
+            # Select top-k nodes for this level
             current_level = heapq.nsmallest(self.beam_width, current_level)
             next_level = []
-
-            for _, current, path in current_level:
+            
+            # Process the current beam
+            for _, cost, current, path, parent in current_level:
                 self.nodes_visited += 1
-
-                if current in visited:
-                    continue
-                visited.add(current)
-
+                visited_nodes.add(current)
+                
+                # Check if we reached a goal
                 if current in self.goals:
-                    return current, self.nodes_generated, self.nodes_visited, path
-
+                    return current, self.nodes_visited, path, list(visited_nodes)
+                
+                # Generate all neighbors
                 for dx, dy, move in self.directions:
                     nx, ny = current[0] + dx, current[1] + dy
                     neighbor = (nx, ny)
-                    if self.is_valid(neighbor) and neighbor not in visited:
+                    
+                    # Cycle prevention - don't go back to parent
+                    if parent == neighbor:
+                        continue
+                        
+                    # Check if the move is valid
+                    if self.is_valid(neighbor) and neighbor not in visited_nodes:
+                        new_cost = cost + 1
                         h = self.heuristic(neighbor, self.get_closest_goal(neighbor))
-                        next_level.append((h, neighbor, path + [move]))
-                        self.nodes_generated += 1
+                        next_level.append((h, new_cost, neighbor, path + [move], current))
+            
+            # Select unique positions for the next beam
+            # This prevents multiple paths to the same state in a single level
+            positions_seen = set()
+            filtered_next_level = []
+            
+            for entry in next_level:
+                position = entry[2]  # The position is the 3rd element
+                if position not in positions_seen:
+                    filtered_next_level.append(entry)
+                    positions_seen.add(position)
+            
+            current_level = filtered_next_level
 
-            current_level = next_level
-
-        return None, self.nodes_generated,self.nodes_visited, []
-
-    def heuristic(self, a, b):
-        # Manhattan distance
-        return abs(a[0] - b[0]) + abs(a[1] - b[1])
-
-    def get_closest_goal(self, pos):
-        return min(self.goals, key=lambda g: self.heuristic(pos, g))
-
-    def is_valid(self, pos):
-        x, y = pos
-        rows, cols = self.grid
-        if not (0 <= x < cols and 0 <= y < rows):
-            return False
-        for wx, wy, w, h in self.walls:
-            if wx <= x < wx + w and wy <= y < wy + h:
-                return False
-        return True
+        # No path found
+        return None, self.nodes_visited, [], list(visited_nodes)
