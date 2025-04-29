@@ -7,6 +7,9 @@ from gbfs import GBFS
 from aStar import AStar
 from iddfs import IDDFS
 from beam import Beam
+import time
+import tracemalloc
+import gc
 
 def main():
     try:
@@ -74,13 +77,27 @@ def main():
                 walls = data["walls"]
             )
         
+        gc.collect()  # Run garbage collection before starting the search
+        tracemalloc.start()  # Start memory tracking
+        start_time = time.perf_counter()  # Start time tracking
+
         goal, nodes_visited, path, visited_grid = algo.search()
 
+        end_time = time.perf_counter()  # End time tracking
+        execution_time = (end_time - start_time) * 1000 # Calculate execution time
+
+        current, peak = tracemalloc.get_traced_memory()  # Get memory usage
+        tracemalloc.stop()  # Stop memory tracking
+        memory_used = peak / 1024  # Convert to KB
+        
         # Display results
         print(f"\n--- Search Results ({method.upper()}) ---")
         print(f"File: {filename}")
         print(f"Algorithm: {method.upper()}")
         print(f"Nodes visited: {nodes_visited}")
+        print(f"Execution time: {execution_time:.4f} ms")
+        print(f"Memory used: {memory_used:.4f} KB")
+        
         
         if goal:
             print(f"Goal reached: {goal}")

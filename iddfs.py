@@ -8,7 +8,13 @@ class IDDFS(SearchAlgorithm):
         all_visited = set() # Track all visited nodes across iterations
 
         while depth <= max_depth:
-            result = self.depth_limited_search(self.start, depth, all_visited)
+            # Create fresh visited set for each depth iteration
+            visited = set([self.start])
+            self.nodes_visited += 1
+            all_visited.add(self.start)
+            
+            # Call recursive depth-limited search
+            result = self.depth_limited_search(self.start, [], depth, visited, all_visited)
             if result is not None:
                 goal, path = result
                 return goal, self.nodes_visited, path, list(all_visited)
@@ -17,32 +23,37 @@ class IDDFS(SearchAlgorithm):
         print(f"No path found within the maximum depth limit. (Depth = {max_depth})")
         return None, self.nodes_visited, [], list(all_visited)
 
-    def depth_limited_search(self, start, depth_limit, all_visited):
-        stack = [(start, [], depth_limit)]
-        visited = set([start])  # Local visited set for this depth iteration
+    def depth_limited_search(self, current, path_so_far, limit, visited, all_visited):
+        """
+        Recursive depth-limited search implementation.
+        Returns: (goal_position, path) or None if not found
+        """
+        # Check if current is a goal
+        if current in self.goals:
+            return current, path_so_far
         
-        self.nodes_visited += 1
-        all_visited.add(start)
+        # Stop if depth limit reached
+        if limit <= 0:
+            return None
         
-        while stack:
-            current, path, limit = stack.pop()
+        # Try each direction
+        for dx, dy, move in self.directions:
+            nx, ny = current[0] + dx, current[1] + dy
+            neighbor = (nx, ny)
             
-            if current in self.goals:
-                return current, path
+            # Only explore valid unvisited positions
+            if self.is_valid(neighbor) and neighbor not in visited:
+                # Mark as visited immediately when discovered
+                self.nodes_visited += 1
+                visited.add(neighbor)
+                all_visited.add(neighbor)
                 
-            if limit <= 0:  # Skip expansion if depth limit reached
-                continue
+                # Explore recursively with reduced depth limit
+                result = self.depth_limited_search(neighbor, path_so_far + [move], limit - 1, visited, all_visited)
                 
-            # Explore neighbors (in reversed order to match recursive DFS behavior)
-            for dx, dy, move in reversed(self.directions):
-                nx, ny = current[0] + dx, current[1] + dy
-                neighbor = (nx, ny)
-                
-                if self.is_valid(neighbor) and neighbor not in visited:
-                    self.nodes_visited += 1
-                    visited.add(neighbor)
-                    all_visited.add(neighbor)
-                    stack.append((neighbor, path + [move], limit - 1))
+                # If goal found, propagate result back up the call stack
+                if result is not None:
+                    return result
         
-        # No path found at this depth
+        # No path found within this branch
         return None
