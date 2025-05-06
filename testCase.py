@@ -17,7 +17,17 @@ class TestCase:
         self.num_walls = num_walls
         self.test_type = test_type
 
-        # Place the start position in one of the quadrants
+        # Select start position and quadrant
+        self.start, self.start_quadrant = self._select_start_quadrant()
+        
+        # Generate goal positions
+        self.goals = self._generate_goals()
+        
+        # Generate walls based on test type
+        self.walls = self._generate_walls_by_type()
+
+    def _select_start_quadrant(self):
+        """Select a random quadrant and position the start within it"""
         quadrant = random.choice(["top_left", "top_right", "bottom_left", "bottom_right"])
         
         if quadrant == "top_left":
@@ -33,26 +43,22 @@ class TestCase:
             x = random.randint(self.cols // 2, self.cols - 1)
             y = random.randint(self.rows // 2, self.rows - 1)
         
-        self.start = (x, y)
-        self.start_quadrant = quadrant
-        
-        # Generate goal positions
-        self.goals = self._generate_goals()
-        
-        # Generate walls based on test type
-        if test_type == "unreachable":
-            self.walls = self._generate_unreachable_walls()
-        elif test_type == "maze":
-            self.walls = self._generate_maze_walls()
-        elif test_type == "dense":
-            self.walls = self._generate_dense_walls()
-        else:
-            self.walls = self._generate_walls()
+        return (x, y), quadrant
+
+    def _generate_walls_by_type(self):
+        """Generate walls based on test type"""
+        if self.test_type == "unreachable":
+            return self._generate_unreachable_walls()
+        elif self.test_type == "maze":
+            return self._generate_maze_walls()
+        elif self.test_type == "dense":
+            return self._generate_dense_walls()
+        else:  # default random
+            return self._generate_walls()
 
     def _is_goal_reachable(self, walls):
         """
         Use flood fill algorithm to check if ALL goals are reachable in a single pass.
-        This is a BFS-based implementation that:
         1. Converts walls to blocked cells
         2. Uses a queue to explore all reachable cells
         3. Tracks visited cells to avoid revisiting

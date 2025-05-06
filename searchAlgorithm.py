@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 class SearchAlgorithm(ABC):
     def __init__(self, grid, start, goals, walls):
+        """Initialize the search algorithm with grid, start position, goals, and walls."""
         self.grid = grid
         self.start = start
         self.goals = goals
@@ -48,4 +49,5 @@ class SearchAlgorithm(ABC):
 
     @abstractmethod
     def search(self):
+        """Abstract method to be implemented by subclasses for specific search algorithms"""
         pass

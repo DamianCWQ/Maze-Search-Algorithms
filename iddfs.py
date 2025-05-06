@@ -4,7 +4,7 @@ class IDDFS(SearchAlgorithm):
     def search(self):
         depth = 0 
         self.nodes_visited = 0
-        max_depth = 50 # Limit to prevent infinite loops
+        max_depth = self.grid[0] * self.grid[1] # Limit according to row * cols to prevent infinite loops
         all_visited = set() # Track all visited nodes across iterations
 
         while depth <= max_depth:
@@ -15,7 +15,7 @@ class IDDFS(SearchAlgorithm):
             
             # Call recursive depth-limited search
             result = self.depth_limited_search(self.start, [], depth, visited, all_visited)
-            if result is not None:
+            if result:
                 goal, path = result
                 return goal, self.nodes_visited, path, list(all_visited)
             depth += 1
@@ -52,7 +52,7 @@ class IDDFS(SearchAlgorithm):
                 result = self.depth_limited_search(neighbor, path_so_far + [move], limit - 1, visited, all_visited)
                 
                 # If goal found, propagate result back up the call stack
-                if result is not None:
+                if result:
                     return result
         
         # No path found within this branch

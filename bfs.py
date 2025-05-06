@@ -18,7 +18,7 @@ class BFS(SearchAlgorithm):
             if current in self.goals:
                 return current, self.nodes_visited, path, list(visited)
 
-            for dx, dy, move in self.directions:  # No reversal for BFS
+            for dx, dy, move in self.directions:
                 nx, ny = current[0] + dx, current[1] + dy
                 neighbor = (nx, ny)
                 if self.is_valid(neighbor) and neighbor not in visited:
