@@ -43,7 +43,9 @@ This project implements and compares six different search algorithms for pathfin
 ## Usage
 ### Running a Single Test
 To run a specific algorithm on a test file:
-```python search.py <filename> <method> [beam_width]```
+```
+python search.py <filename> <method> [beam_width]
+```
 
 Where:
 - <filename> is the path to a test file
